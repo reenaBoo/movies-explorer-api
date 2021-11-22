@@ -6,8 +6,7 @@ const ForbiddenError = require('../errors/forbidden-error');
 
 module.exports.getMovies = (req, res, next) => {
   Movie.find({})
-    .then((movies) => res.status(200)
-      .send({data: movies}))
+    .then((movies) => res.status(200).send({ data: movies }))
     .catch(next);
 };
 
@@ -40,8 +39,7 @@ module.exports.createMovie = (req, res, next) => {
     movieId,
     owner: req.user._id,
   })
-    .then((movie) => res.status(200)
-      .send({data: movie}))
+    .then((movie) => res.status(200).send({ data: movie }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Переданы некорректные данные при создании фильма'));
@@ -56,9 +54,7 @@ module.exports.deleteMovie = (req, res, next) => {
       if (!movie) {
         next(new NotFoundError('Фильм с указанным _id не найден'));
       } else if (movie.owner.toString() === req.user._id) {
-        Movie.deleteOne({ _id: movie._id })
-          .then(res.status(200)
-            .send({ message: 'Фильм удален' }));
+        Movie.deleteOne({ _id: movie._id }).then(res.status(200).send({ message: 'Фильм удален' }));
       } else {
         next(new ForbiddenError('Недостаточно прав для удаления'));
       }

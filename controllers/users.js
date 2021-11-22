@@ -14,8 +14,7 @@ module.exports.findUser = (req, res, next) => {
   User.findById(userId)
     .then((user) => {
       if (user) {
-        res.status(200)
-          .send({ data: user });
+        res.status(200).send({ data: user });
       }
       throw new NotFoundError('Пользователь по указанному _id не найден');
     })
@@ -28,22 +27,22 @@ module.exports.findUser = (req, res, next) => {
 };
 
 module.exports.updateUser = (req, res, next) => {
-  const {
-    name,
-    email,
-  } = req.body;
+  const { name, email } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, {
-    name,
-    email,
-  }, {
-    new: true,
-    runValidators: true,
-  })
+  User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name,
+      email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
     .then((user) => {
       if (user) {
-        res.status(200)
-          .send({ data: user });
+        res.status(200).send({ data: user });
       }
       throw new NotFoundError('Пользователь с указанным _id не найден');
     })
@@ -56,25 +55,25 @@ module.exports.updateUser = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const {
-    name,
-    email,
-    password,
-  } = req.body;
+  const { name, email, password } = req.body;
 
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name,
-      email,
-      password: hash,
-    }))
-    .then(() => res.status(200)
-      .send({
+  bcrypt
+    .hash(password, 10)
+    .then((hash) =>
+      User.create({
+        name,
+        email,
+        password: hash,
+      }),
+    )
+    .then(() =>
+      res.status(200).send({
         data: {
           name,
           email,
         },
-      }))
+      }),
+    )
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
@@ -87,10 +86,7 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.login = (req, res, next) => {
-  const {
-    email,
-    password,
-  } = req.body;
+  const { email, password } = req.body;
 
   User.findOne({ email })
     .select('+password')
@@ -99,8 +95,8 @@ module.exports.login = (req, res, next) => {
         throw new UnauthorizedError('Передан неверный логин или пароль');
       }
 
-      return bcrypt.compare(password, user.password)
-        // eslint-disable-next-line consistent-return
+      return bcrypt
+        .compare(password, user.password)
         .then((matched) => {
           if (!matched) {
             throw new UnauthorizedError('Передан неверный логин или пароль');
@@ -112,17 +108,30 @@ module.exports.login = (req, res, next) => {
             { expiresIn: '7d' },
           );
           // аутентификация успешна
-          return res
-            // отправляем jwt в cookie для защиты от XSS-атаки.
-            .cookie('jwt', token, {
-              maxAge: 3600000 * 24 * 7,
-              httpOnly: true,
-              secure: true,
-              sameSite: 'none',
-            })
-            .send({ message: 'Вход совершен успешно' });
+          return (
+            res
+              // отправляем jwt в cookie для защиты от XSS-атаки.
+              .cookie('jwt', token, {
+                maxAge: 3600000 * 24 * 7,
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+              })
+              .send({ message: 'Вход совершен успешно' })
+          );
         })
         .catch(next);
     })
     .catch(next);
+};
+
+module.exports.logout = (req, res) => {
+  res
+    .cookie('jwt', '', {
+      maxAge: -1,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    })
+    .send({ message: 'Ваша cookie больше не куки' });
 };

@@ -12,6 +12,8 @@ const {
   updateUser,
 } = require('../controllers/users');
 
+const { isEmail } = require('../middlewares/validator');
+
 // возвращает информацию о пользователе (email и имя)
 router.get('/users/me', findUser);
 
@@ -24,10 +26,8 @@ router.patch('/users/me', celebrate({
         .required()
         .min(2)
         .max(30),
-      about: Joi.string()
-        .required()
-        .min(2)
-        .max(30),
+      email: Joi.string()
+        .custom(isEmail),
     }),
 }), updateUser);
 
