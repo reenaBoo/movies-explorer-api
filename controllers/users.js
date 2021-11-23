@@ -127,6 +127,11 @@ module.exports.login = (req, res, next) => {
 
 module.exports.logout = (req, res) => {
   res
-    .clearCookie('jwt')
-    .end();
+    .cookie('jwt', '', {
+      maxAge: -1,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    })
+    .send({ message: 'Ваша cookie больше не куки' });
 };
