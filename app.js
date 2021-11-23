@@ -9,7 +9,7 @@ const app = express();
 const { errors } = require('celebrate');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
-const { router } = require('./routes/index');
+const router = require('./routes/index');
 const NotFoundError = require('./errors/not-found-error');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
