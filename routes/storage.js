@@ -1,6 +1,6 @@
 const router = require('express').Router(); // создали роутер
 const { celebrate, Joi } = require('celebrate');
-const { createUser, login, logout } = require('../controllers/users');
+const { createUser, login } = require('../controllers/users');
 
 router.post(
   '/signup',
@@ -25,6 +25,6 @@ router.post(
   login,
 );
 
-router.post('/signout', logout);
+// router.get('/signout', logout);
 
 module.exports = router;
