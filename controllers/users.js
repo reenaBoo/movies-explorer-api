@@ -1,7 +1,7 @@
-require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { JWT } = require('../config');
 
 const NotFoundError = require('../errors/not-found-error');
 const BadRequestError = require('../errors/bad-request-error');
@@ -48,9 +48,15 @@ module.exports.updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+        return next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
       }
-      next(err);
+      if (err.name === 'CastError') {
+        return next(new BadRequestError('Передан некорректный id пользователя'));
+      }
+      if (err.code === 11000) {
+        return next(new ConflictError('Переданный Email уже используется другим пользователем'));
+      }
+      return next(err);
     });
 };
 
@@ -59,13 +65,13 @@ module.exports.createUser = (req, res, next) => {
 
   bcrypt
     .hash(password, 10)
-    .then((hash) =>
-      User.create({
+    .then((hash) => {
+      return User.create({
         name,
         email,
         password: hash,
-      }),
-    )
+      });
+    })
     .then(() =>
       res.status(200).send({
         data: {
@@ -80,8 +86,9 @@ module.exports.createUser = (req, res, next) => {
       }
       if (err.name === 'MongoServerError') {
         next(new ConflictError('Пользователь с таким e-mail уже существует'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -101,12 +108,7 @@ module.exports.login = (req, res, next) => {
           if (!matched) {
             throw new UnauthorizedError('Передан неверный логин или пароль');
           }
-          const { NODE_ENV, JWT_SECRET } = process.env;
-          const token = jwt.sign(
-            { _id: user._id },
-            NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key',
-            { expiresIn: '7d' },
-          );
+          const token = jwt.sign({ _id: user._id }, JWT, { expiresIn: '7d' });
           // аутентификация успешна
           return (
             res
@@ -126,7 +128,5 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.logout = (req, res) => {
-  res
-    .clearCookie('jwt')
-    .end();
+  res.clearCookie('jwt').end();
 };
