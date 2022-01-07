@@ -25,6 +25,6 @@ router.post(
   login,
 );
 
-router.get('/signout', logout);
+router.post('/signout', logout);
 
 module.exports = router;
