@@ -14,6 +14,7 @@ const {
 } = require('../controllers/movies');
 
 const { isURL } = require('../middlewares/validator');
+const urlRegExp = new RegExp('^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w.-]+)+[\\w\\-._~:/?#[\\]@!$&\'()*+,;=.]+$');
 
 router.get('/movies', getMovies);
 
@@ -33,7 +34,8 @@ router.post('/movies', celebrate({
         .required(),
       image: Joi.string()
         .required()
-        .custom(isURL),
+        .pattern(urlRegExp),
+        // .custom(isURL),
       trailer: Joi.string()
         .required()
         .custom(isURL),
