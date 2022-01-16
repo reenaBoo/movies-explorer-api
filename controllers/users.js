@@ -129,6 +129,10 @@ module.exports.login = (req, res, next) => {
 
 module.exports.logout = (req, res) => {
   res
-    .clearCookie('jwt')
+    .clearCookie('jwt', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    })
     .send({ message: 'Выход совершен успешно' });
 };
